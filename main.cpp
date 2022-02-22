@@ -25,16 +25,8 @@ extern "C"
 
 int main(int argc, char *argv[])
 {
-    XcbEventListener xcb;
+//    XcbEventListener xcb;
 
-    uint32_t values[3];
-    xcb_connection_t * dpy;
-    xcb_screen_t * scre;
-
-    values[0] = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-            | XCB_EVENT_MASK_STRUCTURE_NOTIFY
-            | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
-            | XCB_EVENT_MASK_PROPERTY_CHANGE;
 
 
 
@@ -47,16 +39,11 @@ int main(int argc, char *argv[])
     w.resize(1024,720);
     w.show();
 
+    // let make mainwindow recive appropiet events
+    XcbEventListener::reconfigure_window();
 
 
-    dpy=QX11Info::connection();
-
-    scre = xcb_setup_roots_iterator(xcb_get_setup(dpy)).data;
-
-    xcb_change_window_attributes_checked(dpy, scre->root,
-            XCB_CW_EVENT_MASK, values);
-
-    a.installNativeEventFilter(&xcb);
+   // a.installNativeEventFilter(&xcb);
 
     return a.exec();
 }

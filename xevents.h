@@ -1,76 +1,23 @@
 #ifndef XEVENTS_H
 #define XEVENTS_H
 
-extern "C"
+#include "xeventstemplate.h"
+
+
+class XEvents : public QEvent, public XEventsTemplate
 {
- #include <X11/Xlib.h>
-}
+protected:
 
-#undef Bool
-#undef CursorShape
-#undef Expose
-#undef KeyPress
-#undef KeyRelease
-#undef FocusIn
-#undef FocusOut
-#undef FontChange
-#undef None
-#undef Status
-#undef Unsorted
-
-
-#include <QThread>
-#include <QString>
-
-
-class XEvents : public QThread
-{
-    Q_OBJECT
-
-    XEvent e;
-
-    //char *event_str;
-
-    Display* display;
-
-    void run() override;
-
-
+    uint8_t response_type;
 
 public:
-    XEvents(Display *_display,QObject* parent=nullptr);
+    const static Type TYPE = static_cast<Type>(XEVENT_ID);
+    explicit XEvents(xcb_generic_event_t *ev);
 
-    static QString EventToString(const XEvent &e);
 
-signals:
 
-    // basic x window events
 
-    void onCreateNotify(const XCreateWindowEvent& e);
-
-    void onDestroyNotify(const XDestroyWindowEvent& e);
-
-    void onReparentNotify(const XReparentEvent& e);
-
-    void onMapNotify(const XMapEvent& e);
-
-    void onUnmapNotify(const XUnmapEvent& e);
-
-    void onConfigureNotify(const XConfigureEvent& e);
-
-    void onMapRequest(const XMapRequestEvent& e);
-
-    void onConfigureRequest(const XConfigureRequestEvent& e);
-
-    void onButtonPress(const XButtonEvent& e);
-
-    void onButtonRelease(const XButtonEvent& e);
-
-    void onMotionNotify(const XMotionEvent& e);
-
-    void onKeyPress(const XKeyEvent& e);
-
-    void onKeyRelease(const XKeyEvent& e);
+    ~XEvents();
 
 
 

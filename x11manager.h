@@ -1,39 +1,25 @@
+#pragma once
 #ifndef X11MANAGER_H
 #define X11MANAGER_H
 
-extern "C"
-{
-#include <X11/Xlib.h>
-}
-
-#undef Bool
-#undef CursorShape
-#undef Expose
-#undef KeyPress
-#undef KeyRelease
-#undef FocusIn
-#undef FocusOut
-#undef FontChange
-#undef Status
-#undef None
-#undef Unsorted
 
 #include <QWidget>
 #include <QResizeEvent>
 #include <unordered_map>
 #include <vector>
 #include <QBoxLayout>
+#include <QAbstractEventDispatcher>
 #include "xevents.h"
 #include "xwidget.h"
 #include "tablelayout.h"
+#include "xcbeventlistener.h"
+#include "maprequestxevent.h"
 
 class X11Manager : public QWidget
 {
     Q_OBJECT
 
 // Display *display; // x window manager handle
-
- XEvents *event_loop; // a thread to handle event loop
 // static bool wm_detected;
 
  bool isCreated;
@@ -42,9 +28,13 @@ class X11Manager : public QWidget
 
  TableLayout *layout; // a layout to store x widgets
 
+ XcbEventListener *listener;
+
 
 public:
     explicit X11Manager(QWidget *parent = nullptr);
+
+    bool event(QEvent *event) override;
 
     void createWindow();
 

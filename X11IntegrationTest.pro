@@ -20,18 +20,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    maprequestxevent.cpp \
     tablelayout.cpp \
     x11manager.cpp \
     xcbeventlistener.cpp \
     xevents.cpp \
+    xeventstemplate.cpp \
     xwidget.cpp
 
 HEADERS += \
     mainwindow.h \
+    maprequestxevent.h \
     tablelayout.h \
     x11manager.h \
     xcbeventlistener.h \
     xevents.h \
+    xeventstemplate.h \
     xwidget.h
 
 FORMS += \

@@ -1,22 +1,6 @@
 #ifndef TABLELAYOUT_H
 #define TABLELAYOUT_H
 
-extern "C"
-{
-#include <X11/Xlib.h>
-}
-
-#undef Bool
-#undef CursorShape
-#undef Expose
-#undef KeyPress
-#undef KeyRelease
-#undef FocusIn
-#undef FocusOut
-#undef FontChange
-#undef Status
-#undef None
-#undef Unsorted
 
 #include <QObject>
 #include <QLayout>

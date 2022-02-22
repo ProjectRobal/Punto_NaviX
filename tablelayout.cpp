@@ -138,13 +138,27 @@ uint32_t TableLayout::doLayout(const QRect &rect,bool testOnly) const
         return rect.width();
     }
 
-    qDebug()<<rect;
+    if(_widgets.empty())
+    {
+        return 0;
+    }
 
+    //qDebug()<<rect;
 
+    const uint32_t count=_widgets.size();
 
-    uint32_t _w=rect.width()/columns;
+    uint32_t col_c=std::min(count,columns); // columns count
 
-    uint32_t _h=rect.height()/rows;
+    uint32_t row_c=(count/(columns+1))+1; // rows count
+
+    if(row_c>rows)
+    {
+        row_c=rows;
+    }
+
+    uint32_t _w=rect.width()/col_c;
+
+    uint32_t _h=rect.height()/row_c;
 
     uint32_t x=0;
 
@@ -159,7 +173,7 @@ uint32_t TableLayout::doLayout(const QRect &rect,bool testOnly) const
 
         QRect i_rect=QRect(QPoint((x*_w)+m_hSpace,(y*_h)+m_vSpcae),QSize(_w,_h));
 
-        qDebug()<<"elem: "<<x*y<<" "<<i_rect;
+       // qDebug()<<"elem: "<<x*y<<" "<<i_rect;
 
         item->setGeometry(i_rect);
 

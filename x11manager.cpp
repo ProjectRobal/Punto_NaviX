@@ -7,19 +7,24 @@ X11Manager::X11Manager(QWidget *parent) :
 {
 isCreated=false;
     setFocusPolicy(Qt::StrongFocus);
+
+    listener=new XcbEventListener(this);
+
+    QAbstractEventDispatcher::instance()->installNativeEventFilter(listener);
+
     //wm_detected=false;
 
    // client=NULL;
 
     //display = XOpenDisplay(NULL);
 
-    layout=new TableLayout(2,2,this);
+    layout=new TableLayout(3,3,this);
 
     layout->setSizeConstraint(QLayout::SetNoConstraint);
 
     this->setLayout(layout);
 
-    QLabel *label=new QLabel(this);
+    /*QLabel *label=new QLabel(this);
 
     label->setText("Hello World!");
 
@@ -57,10 +62,22 @@ isCreated=false;
 
     label4->setStyleSheet("border: 5px solid black;");
 
-    layout->addItem(label4,4);
+    layout->addItem(label4,4);*/
 
 
 
+}
+
+bool X11Manager::event(QEvent *event)
+{
+    if(event->type()==MapRequestXEvent::TYPE)
+    {
+        MapRequestXEvent* x11=static_cast<MapRequestXEvent*>(event);
+
+        qDebug()<<x11->ResponseString()<<" "<<x11->responseType();
+    }
+
+    return QWidget::event(event);
 }
 
 void X11Manager::createWindow()
