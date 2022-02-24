@@ -7,8 +7,7 @@
 #include <QObject>
 #include <QDebug>
 #include <QAbstractNativeEventFilter>
-#include "xevents.h"
-#include "maprequestxevent.h"
+#include "xevents_list.h"
 
 
 class XcbEventListener : public QAbstractNativeEventFilter
@@ -25,6 +24,11 @@ public:
     // a function to reconfigure application's root window to recive appropriate x11 events
     // call after the application window has been created
     static void reconfigure_window();
+
+    // make window w listen for focus and eneter events
+    static void make_window_listen(xcb_window_t w);
+
+    static void set_input_focus(xcb_window_t w);
 
     ~XcbEventListener();
 };

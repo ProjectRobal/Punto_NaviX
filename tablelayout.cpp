@@ -1,6 +1,8 @@
 #include "tablelayout.h"
 #include <QDebug>
 #include <QWidgetItem>
+#include <QPropertyAnimation>
+#include <QParallelAnimationGroup>
 
 TableLayout::TableLayout(QWidget* parent)
     : QLayout(parent)
@@ -37,32 +39,34 @@ TableLayout::TableLayout(uint32_t _rows, uint32_t _columns, QWidget *parent)
 
 void TableLayout::addItem(QLayoutItem *item)
 {
-    Q_UNUSED(item);
-    qDebug()<<"Use addItem(QLayoutItem*,const Window) instead!";
-}
 
-void TableLayout::addItem(QLayoutItem *item, const Window id)
-{
-    _widgets.insert(std::pair<Window,QLayoutItem*>(id,item));
-}
-
-void TableLayout::addItem(QWidget *widget, const Window id)
-{
- _widgets.insert(std::pair<Window,QLayoutItem*>(id,new QWidgetItem(widget)));
-}
-
-bool TableLayout::hasWindow(const Window id)
-{
-    return _widgets.count(id)>0;
-}
-
-void TableLayout::removeWindow(const Window id)
-{
-    if(_widgets.count(id)>0)
+    if(_widgets.size()<(columns*rows))
     {
 
-        _widgets.erase(id);
+    _widgets.push_back(item);
+
     }
+}
+
+void TableLayout::addItem(QWidget *widget)
+{
+    if(_widgets.size()<(columns*rows))
+    {
+
+ _widgets.push_back(new QWidgetItem(widget));
+
+    }
+}
+
+void TableLayout::removeWidget(QWidget *widget)
+{
+    auto item=std::find_if(_widgets.begin(),_widgets.end(),[widget](QLayoutItem *it)
+    {
+        return it->widget()==widget;
+
+    });
+
+    _widgets.erase(item);
 }
 
 int TableLayout::horizontalSpacing() const
@@ -101,14 +105,8 @@ QLayoutItem *TableLayout::itemAt(int index) const
     {
         return NULL;
     }
-    auto iter=_widgets.begin();
 
-    for(int i=0;i<index;i++)
-    {
-        iter++;
-    }
-
-    return iter->second;
+    return _widgets.at(index);
 }
 
 QSize TableLayout::minimumSize() const
@@ -164,9 +162,11 @@ uint32_t TableLayout::doLayout(const QRect &rect,bool testOnly) const
 
     uint32_t y=0;
 
+    QParallelAnimationGroup *group=new QParallelAnimationGroup(parent());
+
     for(auto key : _widgets)
     {
-        QLayoutItem * item=key.second;
+
 
         if(y<rows)
         {
@@ -175,24 +175,31 @@ uint32_t TableLayout::doLayout(const QRect &rect,bool testOnly) const
 
        // qDebug()<<"elem: "<<x*y<<" "<<i_rect;
 
-        item->setGeometry(i_rect);
+
+        QPropertyAnimation *anim=new QPropertyAnimation(key->widget(),"geometry");
+        anim->setDuration(500);
+        anim->setStartValue(key->geometry());
+        anim->setEndValue(i_rect);
+
+        // unfreeze widget when animation finished
+        QObject::connect(anim,&QPropertyAnimation::finished,this,[this,key]()
+        {
+            key->widget()->setUpdatesEnabled(true);
+        });
+
+        group->addAnimation(anim);
+
+        // freeze widget during animation
+        key->widget()->setUpdatesEnabled(false);
+
+        //key->setGeometry(i_rect);
 
         x++;
 
-        if(x>=columns)
-        {
-        x=0;
-        y++;
         }
-        }
-        else
-        {
-            item->setGeometry(QRect(0,0,0,0));
-
-        }
-
-
     }
+
+    group->start();
 
 
     return rect.width();
@@ -213,10 +220,27 @@ QLayoutItem *TableLayout::takeAt(int index)
     return itemAt(index);
 }
 
-XWidget *TableLayout::fromWindow(const Window win)
+TableLayout::layout_ptr TableLayout::begin()
 {
-    return reinterpret_cast<XWidget*>(_widgets[win]);
+    return _widgets.begin();
 }
+
+TableLayout::layout_ptr TableLayout::end()
+{
+    return _widgets.end();
+}
+
+void TableLayout::remove(TableLayout::layout_ptr ptr)
+{
+    _widgets.erase(ptr);
+}
+
+void TableLayout::remove(uint32_t id)
+{
+    _widgets.erase(_widgets.begin()+id);
+}
+
+
 
 void TableLayout::addColumn()
 {
@@ -296,5 +320,9 @@ uint32_t TableLayout::getColumn() const
 
 TableLayout::~TableLayout()
 {
+    for(auto p : _widgets)
+    {
+        delete p;
+    }
     _widgets.clear();
 }

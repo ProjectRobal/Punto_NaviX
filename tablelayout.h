@@ -5,13 +5,15 @@
 #include <QObject>
 #include <QLayout>
 #include <unordered_map>
+#include <vector>
+#include <memory>
 #include <xwidget.h>
 
 class TableLayout : public QLayout
 {
 protected:
 
-     std::unordered_map<Window,QLayoutItem*> _widgets;
+     std::vector<QLayoutItem*> _widgets;
 
      // store row and column count, width is columns , height is rows
      uint32_t columns;
@@ -23,19 +25,18 @@ protected:
 
 
 public:
+
+     typedef std::vector<QLayoutItem*>::iterator layout_ptr;
+
     TableLayout(QWidget* parent);
 
     TableLayout(uint32_t _rows,uint32_t _columns,QWidget* parent);
 
     void addItem(QLayoutItem *item) override;
 
-    void addItem(QLayoutItem *item,const Window id);
+    void addItem(QWidget *widget);
 
-    void addItem(QWidget *widget,const Window id);
-
-    bool hasWindow(const Window id);
-
-    void removeWindow(const Window id);
+    void removeWidget(QWidget *widget);
 
     int horizontalSpacing() const;
 
@@ -61,7 +62,13 @@ public:
 
     QLayoutItem *takeAt(int index) override;
 
-    XWidget *fromWindow(const Window win);
+    layout_ptr begin();
+
+    layout_ptr end();
+
+    void remove(layout_ptr ptr);
+
+    void remove(uint32_t id);
 
     void addColumn();
 

@@ -1,5 +1,8 @@
 #include "xwidget.h"
 #include <QDebug>
+#include <QStyleOption>
+#include <QPainter>
+#include "xcbeventlistener.h"
 
 #define BORDER_WIDTH 3
 #define BORDER_COLOR 0xff0000
@@ -25,14 +28,28 @@ bool XWidget::isWindowCreated()
 
 void XWidget::removeWindow()
 {
-
+    win->close();
 }
 
-XWidget::XWidget(Display* _d,Window _client,QWidget *parent) : QWidget(parent)
+void XWidget::set_active()
+{
+    qDebug()<<"Active change";
+    if(win->isActive())
+    {
+        this->setProperty("cssClass","active");
+        //this->setStyleSheet("border: 5px solid red;");
+        qDebug()<<"Active";
+    }
+    else
+    {
+        this->setProperty("cssClass","");
+        this->setStyleSheet("");
+    }
+}
+
+XWidget::XWidget(xcb_window_t _client,QWidget *parent) : QWidget(parent)
 {
     create_window=false;
-
-    d=_d;
 
     client=_client;
 
@@ -46,6 +63,10 @@ XWidget::XWidget(Display* _d,Window _client,QWidget *parent) : QWidget(parent)
      this->setLayout(layout);
 
     this->show();
+
+     QObject::connect(win,&QWindow::activeChanged,this,&XWidget::set_active);
+
+    XcbEventListener::make_window_listen(client);
 
 }
 
@@ -68,12 +89,34 @@ void XWidget::paintEvent(QPaintEvent *event)
         create_window=true;
    }
 
+    QStyleOption opt;
+    opt.init(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 
+
+}
+
+
+void XWidget::FocusIn()
+{
+
+    setObjectName("active");
+    setStyleSheet("border:5px solid red");
+
+}
+
+void XWidget::FocusOut()
+{
+    setObjectName("");
+    setStyleSheet("");
 }
 
 
 
 XWidget::~XWidget()
 {
-
+    delete layout;
+    removeWindow();
+    delete win;
 }

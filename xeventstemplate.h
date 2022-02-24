@@ -11,7 +11,10 @@ enum XEVENTS
 {
     GENERAL=XEVENT_ID,
     MAP_REQUEST,
-    DESTROY_NOTIFY
+    DESTROY_NOTIFY,
+    FOCUS_IN,
+    FOCUS_OUT,
+    ENTER_NOTIFY
 };
 
 class XEventsTemplate

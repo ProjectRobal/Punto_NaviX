@@ -1,24 +1,8 @@
 #ifndef XWIDGET_H
 #define XWIDGET_H
 
-extern "C"
-{
- #include <X11/Xlib.h>
-}
-
-#undef Bool
-#undef CursorShape
-#undef Expose
-#undef KeyPress
-#undef KeyRelease
-#undef FocusIn
-#undef FocusOut
-#undef FontChange
-#undef None
-#undef Status
-#undef Unsorted
-
-
+#include <xcb/xcb.h>
+#include <xcb/xcb_util.h>
 
 #include <QWidget>
 #include <QLayoutItem>
@@ -31,16 +15,18 @@ class XWidget : public QWidget
 {
     Q_OBJECT
 
-    Window client;
-    Display *d;
+    xcb_window_t client;
     QWindow *win;
     QGridLayout *layout;
     bool create_window;
 
+protected slots:
+
+    void set_active();
 
 
 public:
-    explicit XWidget(Display* _d,Window _client,QWidget *parent=nullptr);
+    explicit XWidget(xcb_window_t _client,QWidget *parent=nullptr);
 
      void removeWindow();
 
@@ -51,6 +37,18 @@ public:
     void resizeEvent(QResizeEvent *event) override;
 
     void paintEvent(QPaintEvent *event) override;
+
+
+    void FocusIn();
+
+    void FocusOut();
+
+    void dropActive();
+
+    xcb_window_t getClient()
+    {
+        return client;
+    }
 
 
 

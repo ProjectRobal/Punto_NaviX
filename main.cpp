@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     w.show();
 
     // let make mainwindow recive appropiet events
-    XcbEventListener::reconfigure_window();
+   // XcbEventListener::reconfigure_window();
 
 
    // a.installNativeEventFilter(&xcb);

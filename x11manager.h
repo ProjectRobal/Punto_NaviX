@@ -6,14 +6,15 @@
 #include <QWidget>
 #include <QResizeEvent>
 #include <unordered_map>
+#include <memory>
 #include <vector>
 #include <QBoxLayout>
 #include <QAbstractEventDispatcher>
-#include "xevents.h"
+#include <QShortcut>
+#include "xevents_list.h"
 #include "xwidget.h"
 #include "tablelayout.h"
 #include "xcbeventlistener.h"
-#include "maprequestxevent.h"
 
 class X11Manager : public QWidget
 {
@@ -22,13 +23,16 @@ class X11Manager : public QWidget
 // Display *display; // x window manager handle
 // static bool wm_detected;
 
- bool isCreated;
-
  //const Window root_; // default root window
+
+ std::unordered_map<xcb_window_t,XWidget*> _widgets;
 
  TableLayout *layout; // a layout to store x widgets
 
  XcbEventListener *listener;
+
+ // current active widget
+ XWidget *focus;
 
 
 public:
@@ -36,31 +40,36 @@ public:
 
     bool event(QEvent *event) override;
 
-    void createWindow();
-
     void resizeEvent(QResizeEvent *event) override;
 
     void paintEvent(QPaintEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
 
+    void setShortCuts();
+
     // create a frame for the window
-    void Frame(Window w, bool was_created_before_window_manager);
+    void Frame(xcb_window_t w);
 
     // destroy the window
-    void Unframe(Window w);
+    void Unframe(xcb_window_t w);
 
-    static int onWMDetected(Display* display, XErrorEvent* e);
+    void setActive(xcb_window_t w);
 
-    static int onXError(Display* display, XErrorEvent* e);
+    void setFocusColor(xcb_window_t w);
+
+    void removeFocusColor(xcb_window_t w);
+
 
  ~X11Manager();
 
 public slots:
 
+    void RemoveWindow();
+
 
     // Event handlers.
-      void OnCreateNotify(const XCreateWindowEvent& e);
+     /* void OnCreateNotify(const XCreateWindowEvent& e);
       void OnDestroyNotify(const XDestroyWindowEvent& e);
       void OnReparentNotify(const XReparentEvent& e);
       void OnMapNotify(const XMapEvent& e);
@@ -72,7 +81,7 @@ public slots:
       void OnButtonRelease(const XButtonEvent& e);
       void OnMotionNotify(const XMotionEvent& e);
       void OnKeyPress(const XKeyEvent& e);
-      void OnKeyRelease(const XKeyEvent& e);
+      void OnKeyRelease(const XKeyEvent& e);*/
 
 signals:
 

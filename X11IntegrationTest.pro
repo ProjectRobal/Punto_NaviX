@@ -18,6 +18,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    destroynotifyxevents.cpp \
+    enternotifyxevents.cpp \
+    focusinxevents.cpp \
+    focusoutxevents.cpp \
     main.cpp \
     mainwindow.cpp \
     maprequestxevent.cpp \
@@ -29,12 +33,17 @@ SOURCES += \
     xwidget.cpp
 
 HEADERS += \
+    destroynotifyxevents.h \
+    enternotifyxevents.h \
+    focusinxevents.h \
+    focusoutxevents.h \
     mainwindow.h \
     maprequestxevent.h \
     tablelayout.h \
     x11manager.h \
     xcbeventlistener.h \
     xevents.h \
+    xevents_list.h \
     xeventstemplate.h \
     xwidget.h
 
