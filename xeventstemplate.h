@@ -1,6 +1,13 @@
 #ifndef XEVENTSTEMPLATE_H
 #define XEVENTSTEMPLATE_H
 
+
+#define R_KEY 82
+
+#define DELETE_KEY 0
+
+#define BACKSPACE_KEY 8
+
 #include <xcb/xcb.h>
 #include <xcb/xcb_util.h>
 #include <QEvent>
@@ -14,7 +21,12 @@ enum XEVENTS
     DESTROY_NOTIFY,
     FOCUS_IN,
     FOCUS_OUT,
-    ENTER_NOTIFY
+    ENTER_NOTIFY,
+    UNMAP_NOTIFY,
+    BUTTON_PRESS,
+    BUTTON_RELEASE,
+    KEY_PRESS,
+    KEY_RELEASE
 };
 
 class XEventsTemplate

@@ -1,14 +1,22 @@
 #include "x11manager.h"
 #include <QDebug>
 #include <QLabel>
-#include <QX11Info>
+#include <QProcess>
 
 X11Manager::X11Manager(QWidget *parent) :
     QWidget(parent)
 {
+
+
+
     focus=NULL;
 
     XcbEventListener::reconfigure_window();
+
+
+
+    // windows
+    //XcbEventListener::grab_key(XCB_MOD_MASK_4,27);
 
     setFocusPolicy(Qt::StrongFocus);
 
@@ -140,6 +148,76 @@ bool X11Manager::event(QEvent *event)
     }
         break;
 
+    case UnmapNotifyXEvents::TYPE:
+    {
+        UnmapNotifyXEvents* x11=static_cast<UnmapNotifyXEvents*>(event);
+
+        qDebug()<<x11->ResponseString()<<" "<<x11->responseType();
+        qDebug()<<"client: "<<x11->getClient();
+        qDebug()<<"root: "<<x11->getRoot();
+        Unframe(x11->getClient());
+    }
+        break;
+
+    case PressKeyXEvent::TYPE:
+        {
+            PressKeyXEvent* x11=static_cast<PressKeyXEvent*>(event);
+
+            if(x11->getEvent()!=XcbEventListener::get_root())
+            {
+                //break;
+            }
+
+            qDebug()<<x11->ResponseString()<<" "<<x11->responseType();
+            qDebug()<<"client: "<<x11->getEvent();
+            qDebug()<<"root: "<<x11->getRoot();
+            qDebug()<<"key: "<<x11->getKey();
+
+            onPressKey(x11->getKey(),x11->getMod());
+        }
+            break;
+
+        case ReleaseKeyXEvent::TYPE:
+       {
+           ReleaseKeyXEvent* x11=static_cast<ReleaseKeyXEvent*>(event);
+
+           if(x11->getEvent()!=XcbEventListener::get_root())
+           {
+              break;
+           }
+
+           qDebug()<<x11->ResponseString()<<" "<<x11->responseType();
+           qDebug()<<"client: "<<x11->getEvent();
+           qDebug()<<"root: "<<x11->getRoot();
+           qDebug()<<"key: "<<x11->getKey();
+
+           onReleaseKey(x11->getKey(),x11->getMod());
+       }
+           break;
+
+   /*  case ButtonPressXEvents::TYPE:
+    {
+        ButtonPressXEvents* x11=static_cast<ButtonPressXEvents*>(event);
+
+        qDebug()<<x11->ResponseString()<<" "<<x11->responseType();
+        qDebug()<<"client: "<<x11->getEvent();
+        qDebug()<<"root: "<<x11->getRoot();
+        qDebug()<<"key: "<<x11->getKey();
+    }
+        break;
+
+    case ButtonReleaseXEvents::TYPE:
+   {
+       ButtonReleaseXEvents* x11=static_cast<ButtonReleaseXEvents*>(event);
+
+       qDebug()<<x11->ResponseString()<<" "<<x11->responseType();
+       qDebug()<<"client: "<<x11->getEvent();
+       qDebug()<<"root: "<<x11->getRoot();
+       qDebug()<<"key: "<<x11->getKey();
+   }
+       break;
+       */
+
     }
 
     return QWidget::event(event);
@@ -159,6 +237,7 @@ void X11Manager::paintEvent(QPaintEvent *event)
 
 void X11Manager::keyPressEvent(QKeyEvent *event)
 {
+    /*
     if(event->key()==Qt::Key::Key_Right)
     {
         layout->addColumn();
@@ -172,13 +251,39 @@ void X11Manager::keyPressEvent(QKeyEvent *event)
         qDebug()<<"Columns: "<<layout->getColumn();
         this->update();
     }
-
+    */
 }
 
 void X11Manager::setShortCuts()
 {
-    QShortcut *win_del=new QShortcut(QKeySequence(Qt::CTRL+Qt::Key_Delete),this,SLOT(RemoveWindow()));
+    // control + delete , remove selected window
+    //QShortcut *win_del=new QShortcut(QKeySequence(Qt::META + Qt::SHIFT +Qt::Key_Delete),this,SLOT(RemoveWindow()));
+
+    // window + run , open dialog run prompt
+    //QShortcut *win_run=new QShortcut(QKeySequence(Qt::META + Qt::SHIFT + Qt::Key_R),this,SLOT(RunDialog()));
+
+    XcbEventListener::ungrab_key(XCB_MOD_MASK_ANY,XCB_GRAB_ANY);
+
+    // meta + shift + r , open dialog run prompt
+    XcbEventListener::grab_key(XCB_MOD_MASK_4 | XCB_MOD_MASK_SHIFT,Qt::Key_R); //R button
+
+    // meta + shift + d , remove selected window
+    XcbEventListener::grab_key(XCB_MOD_MASK_4 | XCB_MOD_MASK_SHIFT,Qt::Key_D); //D button
+
+    // meta + control + left , move selected window left
+    XcbEventListener::grab_key(XCB_MOD_MASK_ANY,0xff51); //left button
+
+    // meta + control + right , move selected window right
+    XcbEventListener::grab_key(XCB_MOD_MASK_ANY,0xff53); //right button
+
+    // meta + control + up , move selected window up
+    XcbEventListener::grab_key(XCB_MOD_MASK_ANY,0xff52); //up button
+
+    // meta + control + down , move selected window down
+    XcbEventListener::grab_key(XCB_MOD_MASK_ANY,0xff54); //down button
+
 }
+
 
 void X11Manager::Frame(xcb_window_t w)
 {
@@ -203,7 +308,7 @@ void X11Manager::Frame(xcb_window_t w)
 
     layout->addItem(_w);
 
-    //_w->makeActive();
+    _w->setPtr(layout->end()-1,layout->get_index_of(layout->end()-1)); // last element of layout
 
 
   }
@@ -214,9 +319,11 @@ void X11Manager::Unframe(xcb_window_t w) {
       return;
   }
   qDebug()<<"Unframe window!";
-
+   layout->remove(_widgets[w]->getPtr());
   delete _widgets[w];
   _widgets.erase(w);
+
+  this->update();
 
 
 }
@@ -237,6 +344,8 @@ void X11Manager::setActive(xcb_window_t w)
         focus->FocusIn();
 
         XcbEventListener::set_input_focus(w);
+
+        this->update();
     }
 
 
@@ -262,6 +371,158 @@ void X11Manager::removeFocusColor(xcb_window_t w)
     }
 }
 
+void X11Manager::onPressKey(xcb_keysym_t key, uint16_t mod)
+{
+    // meta + shift
+    switch(mod )
+    {
+        case (XCB_MOD_MASK_4 | XCB_MOD_MASK_SHIFT):
+    {
+        switch (key) {
+
+        case Qt::Key_R: //R
+
+            RunDialog();
+
+            break;
+
+        case Qt::Key_D: //Delete
+
+            RemoveWindow();
+
+            break;
+
+        }
+    }
+        break;
+
+    default:
+    {
+        switch (key) {
+
+        case 81: //Left arrow
+        {
+            if(focus==NULL)
+            {
+                break;
+            }
+            qDebug()<<"Swap left";
+
+
+
+            TableLayout::layout_ptr ptr=layout->switch_left(focus->getPtr());
+
+            TableLayout::layout_ptr prev=layout->get_ptr_on_right(ptr); // previous iterator
+            if(ptr!=focus->getPtr())
+            {
+
+            reinterpret_cast<XWidget*>((*prev)->widget())->setPtr(prev,layout->get_index_of(prev));
+
+                focus->setPtr(ptr,layout->get_index_of(ptr));
+            }
+
+
+
+
+           }
+            break;
+
+        case 83: //Right arrow
+        {
+            if(focus==NULL)
+            {
+                break;
+            }
+            qDebug()<<"Swap right";
+
+
+            TableLayout::layout_ptr ptr=layout->switch_right(focus->getPtr());
+
+            TableLayout::layout_ptr prev=layout->get_ptr_on_left(ptr); // previous iterator
+            if(ptr!=focus->getPtr())
+            {
+
+            reinterpret_cast<XWidget*>((*prev)->widget())->setPtr(prev,layout->get_index_of(prev));
+
+             focus->setPtr(ptr,layout->get_index_of(ptr));
+            }
+
+
+        }
+            break;
+
+        case 82: //Up arrow
+        {
+            if(focus==NULL)
+            {
+                break;
+            }
+            qDebug()<<"Swap up";
+
+
+            TableLayout::layout_ptr ptr=layout->switch_up(focus->getPtr());
+
+            TableLayout::layout_ptr prev=layout->get_ptr_on_down(ptr); // previous iterator
+
+            qDebug()<<"new iterator";
+
+            if(ptr!=focus->getPtr())
+            {
+
+            reinterpret_cast<XWidget*>((*prev)->widget())->setPtr(prev,layout->get_index_of(prev));
+
+                focus->setPtr(ptr,layout->get_index_of(ptr));
+
+            }
+            qDebug()<<"new iterator1";
+
+
+        }
+            break;
+
+        case 84: //Down arrow
+        {
+            if(focus==NULL)
+            {
+                break;
+            }
+            qDebug()<<"Swap down";
+
+
+            TableLayout::layout_ptr ptr=layout->switch_down(focus->getPtr());
+
+            TableLayout::layout_ptr prev=layout->get_ptr_on_up(ptr); // previous iterator
+
+            qDebug()<<"new iterator";
+            if(ptr!=focus->getPtr())
+            {
+
+            reinterpret_cast<XWidget*>((*prev)->widget())->setPtr(prev,layout->get_index_of(prev));
+
+                focus->setPtr(ptr,layout->get_index_of(ptr));
+
+            }
+
+            qDebug()<<"new iterator1";
+
+
+        }
+            break;
+
+        }
+    }
+
+        break;
+
+
+    }
+}
+
+void X11Manager::onReleaseKey(xcb_keysym_t key, uint16_t mod)
+{
+
+}
+
 void X11Manager::RemoveWindow()
 {
     qDebug()<<"Remove";
@@ -272,6 +533,27 @@ void X11Manager::RemoveWindow()
         delete focus;
         focus=NULL;
         qDebug()<<"Window removed!";
+    }
+}
+
+void X11Manager::RunDialog()
+{
+    qDebug()<<"Run";
+    bool ok;
+    QInputDialog *run=new QInputDialog(this);
+
+    QString prog=run->getText(this,tr("Run"),tr("Open: "),QLineEdit::Normal,"",&ok);
+
+    if((ok)&&(!prog.isEmpty()))
+    {
+        if(QProcess::startDetached(prog,QStringList()))
+        {
+            qDebug()<<"Program started: "<<prog;
+        }
+        else
+        {
+            qDebug()<<prog<<" failed!";
+        }
     }
 }
 

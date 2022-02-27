@@ -1,19 +1,24 @@
+#pragma once
 #ifndef TABLELAYOUT_H
 #define TABLELAYOUT_H
 
 
 #include <QObject>
+#include <QWidget>
 #include <QLayout>
 #include <unordered_map>
-#include <vector>
+#include <deque>
 #include <memory>
-#include <xwidget.h>
 
 class TableLayout : public QLayout
 {
-protected:
 
-     std::vector<QLayoutItem*> _widgets;
+    Q_OBJECT
+
+protected:
+     QRect last_geometry;
+
+     std::deque<QLayoutItem*> _widgets;
 
      // store row and column count, width is columns , height is rows
      uint32_t columns;
@@ -26,7 +31,7 @@ protected:
 
 public:
 
-     typedef std::vector<QLayoutItem*>::iterator layout_ptr;
+     typedef std::deque<QLayoutItem*>::iterator layout_ptr;
 
     TableLayout(QWidget* parent);
 
@@ -90,9 +95,33 @@ public:
 
     uint32_t getColumn() const;
 
+    TableLayout::layout_ptr switch_left(layout_ptr ptr);
 
+    TableLayout::layout_ptr switch_right(layout_ptr ptr);
+
+    TableLayout::layout_ptr switch_up(layout_ptr ptr);
+
+    TableLayout::layout_ptr switch_down(layout_ptr ptr);
+
+    uint32_t get_index_of(layout_ptr ptr);
+
+    TableLayout::layout_ptr get_ptr_on_left(layout_ptr ptr);
+
+    TableLayout::layout_ptr get_ptr_on_right(layout_ptr ptr);
+
+    TableLayout::layout_ptr get_ptr_on_up(layout_ptr ptr);
+
+    TableLayout::layout_ptr get_ptr_on_down(layout_ptr ptr);
+
+signals:
+
+    void pop(QWidget *wid);
+
+public:
 
     ~TableLayout();
+
+
 
 };
 

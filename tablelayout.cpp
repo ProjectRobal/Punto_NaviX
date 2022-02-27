@@ -11,6 +11,7 @@ TableLayout::TableLayout(QWidget* parent)
     columns=1;
     m_hSpace=0;
     m_vSpcae=0;
+    last_geometry=QRect(0,0,0,0);
 }
 
 TableLayout::TableLayout(uint32_t _rows, uint32_t _columns, QWidget *parent)
@@ -35,6 +36,7 @@ TableLayout::TableLayout(uint32_t _rows, uint32_t _columns, QWidget *parent)
 
     m_hSpace=0;
     m_vSpcae=0;
+    last_geometry=QRect(0,0,0,0);
 }
 
 void TableLayout::addItem(QLayoutItem *item)
@@ -42,10 +44,20 @@ void TableLayout::addItem(QLayoutItem *item)
 
     if(_widgets.size()<(columns*rows))
     {
-
+   // item->setGeometry(QRect(QPoint(last_geometry.width(),last_geometry.height()),QSize(0,0)));
     _widgets.push_back(item);
 
     }
+    else
+    {
+
+        emit pop(_widgets.back()->widget());
+
+        _widgets.pop_back();
+        _widgets.push_back(item);
+    }
+
+    this->update();
 }
 
 void TableLayout::addItem(QWidget *widget)
@@ -54,8 +66,18 @@ void TableLayout::addItem(QWidget *widget)
     {
 
  _widgets.push_back(new QWidgetItem(widget));
-
+// _widgets.back()->setGeometry(QRect(QPoint(last_geometry.width(),last_geometry.height()),QSize(0,0)));
     }
+    else
+    {
+
+        emit pop(_widgets.back()->widget());
+
+        _widgets.pop_back();
+        _widgets.push_back(new QWidgetItem(widget));
+    }
+
+    this->update();
 }
 
 void TableLayout::removeWidget(QWidget *widget)
@@ -67,6 +89,8 @@ void TableLayout::removeWidget(QWidget *widget)
     });
 
     _widgets.erase(item);
+
+    this->update();
 }
 
 int TableLayout::horizontalSpacing() const
@@ -107,6 +131,8 @@ QLayoutItem *TableLayout::itemAt(int index) const
     }
 
     return _widgets.at(index);
+
+
 }
 
 QSize TableLayout::minimumSize() const
@@ -124,6 +150,8 @@ QSize TableLayout::minimumSize() const
 
 void TableLayout::setGeometry(const QRect &rect)
 {
+    last_geometry=rect;
+
     QLayout::setGeometry(rect);
 
     doLayout(rect,false);
@@ -167,14 +195,10 @@ uint32_t TableLayout::doLayout(const QRect &rect,bool testOnly) const
     for(auto key : _widgets)
     {
 
-
-        if(y<rows)
-        {
-
         QRect i_rect=QRect(QPoint((x*_w)+m_hSpace,(y*_h)+m_vSpcae),QSize(_w,_h));
 
-       // qDebug()<<"elem: "<<x*y<<" "<<i_rect;
-
+        //qDebug()<<"elem: "<<x*y<<" "<<i_rect;
+       // qDebug()<<i_rect;
 
         QPropertyAnimation *anim=new QPropertyAnimation(key->widget(),"geometry");
         anim->setDuration(500);
@@ -196,8 +220,14 @@ uint32_t TableLayout::doLayout(const QRect &rect,bool testOnly) const
 
         x++;
 
+        if(x>=columns)
+        {
+            y++;
+            x=0;
         }
-    }
+
+        }
+
 
     group->start();
 
@@ -233,11 +263,15 @@ TableLayout::layout_ptr TableLayout::end()
 void TableLayout::remove(TableLayout::layout_ptr ptr)
 {
     _widgets.erase(ptr);
+
+    this->update();
 }
 
 void TableLayout::remove(uint32_t id)
 {
     _widgets.erase(_widgets.begin()+id);
+
+    this->update();
 }
 
 
@@ -316,6 +350,155 @@ uint32_t TableLayout::getRow() const
 uint32_t TableLayout::getColumn() const
 {
     return columns;
+}
+
+
+TableLayout::layout_ptr TableLayout::switch_left(TableLayout::layout_ptr ptr)
+{
+    if(_widgets.size()<=1)
+    {
+        return ptr;
+    }
+    // if ptr is first element do nothing
+    if(ptr==_widgets.begin())
+    {
+        return ptr;
+    }
+
+    TableLayout::layout_ptr ptr1=ptr-1;
+
+    qDebug()<<"swap";
+
+    std::iter_swap(ptr,ptr1);
+
+    this->update();
+
+    return ptr1;
+}
+
+TableLayout::layout_ptr TableLayout::switch_right(TableLayout::layout_ptr ptr)
+{
+    if(_widgets.size()<=1)
+    {
+        return ptr;
+    }
+    // if ptr is last element do nothing
+    if(ptr==_widgets.end()-1)
+    {
+        return ptr;
+    }
+
+    TableLayout::layout_ptr ptr1=ptr+1;
+
+    qDebug()<<"prev: "<<get_index_of(ptr);
+
+    qDebug()<<"index: "<<get_index_of(ptr1);
+
+    qDebug()<<"swap";
+
+    std::iter_swap(ptr,ptr1);
+
+    this->update();
+
+    return ptr1;
+}
+
+TableLayout::layout_ptr TableLayout::switch_up(TableLayout::layout_ptr ptr)
+{
+    if(_widgets.size()<=columns)
+    {
+        return ptr;
+    }
+    // if ptr is last element do nothing
+    if(get_index_of(ptr)<columns)
+    {
+        return ptr;
+    }
+
+    TableLayout::layout_ptr ptr1=ptr-columns;
+
+    qDebug()<<get_index_of(ptr1);
+
+    qDebug()<<"swap";
+
+    std::iter_swap(ptr,ptr1);
+
+    qDebug()<<"swap1";
+
+    this->update();
+
+    return ptr1;
+}
+
+TableLayout::layout_ptr TableLayout::switch_down(TableLayout::layout_ptr ptr)
+{
+    if(_widgets.size()<=columns)
+    {
+        return ptr;
+    }
+    // if ptr is last element do nothing
+    if(get_index_of(ptr)>= (_widgets.size()-columns))
+    {
+        return ptr;
+    }
+
+    TableLayout::layout_ptr ptr1=ptr+columns;
+
+     qDebug()<<get_index_of(ptr1);
+
+    qDebug()<<"swap";
+
+    std::iter_swap(ptr,ptr1);
+
+    this->update();
+
+    return ptr1;
+}
+
+uint32_t TableLayout::get_index_of(TableLayout::layout_ptr ptr)
+{
+    return  std::distance(_widgets.begin(),ptr);
+}
+
+TableLayout::layout_ptr TableLayout::get_ptr_on_left(TableLayout::layout_ptr ptr)
+{
+    if(ptr==_widgets.begin())
+    {
+        return ptr;
+    }
+
+    return ptr-1;
+
+}
+
+TableLayout::layout_ptr TableLayout::get_ptr_on_right(TableLayout::layout_ptr ptr)
+{
+    if(ptr==_widgets.end()-1)
+    {
+        return ptr;
+    }
+
+    return ptr+1;
+}
+
+TableLayout::layout_ptr TableLayout::get_ptr_on_up(TableLayout::layout_ptr ptr)
+{
+    if(_widgets.size()<columns)
+    {
+        return ptr;
+    }
+
+    return ptr-columns;
+}
+
+TableLayout::layout_ptr TableLayout::get_ptr_on_down(TableLayout::layout_ptr ptr)
+{
+    if(_widgets.size()<columns)
+    {
+        return ptr;
+    }
+
+    return ptr+columns;
 }
 
 TableLayout::~TableLayout()

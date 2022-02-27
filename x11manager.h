@@ -5,6 +5,7 @@
 
 #include <QWidget>
 #include <QResizeEvent>
+#include <QInputDialog>
 #include <unordered_map>
 #include <memory>
 #include <vector>
@@ -47,7 +48,6 @@ public:
     void keyPressEvent(QKeyEvent *event) override;
 
     void setShortCuts();
-
     // create a frame for the window
     void Frame(xcb_window_t w);
 
@@ -60,6 +60,10 @@ public:
 
     void removeFocusColor(xcb_window_t w);
 
+    void onPressKey(xcb_keysym_t key,uint16_t mod);
+
+    void onReleaseKey(xcb_keysym_t key,uint16_t mod);
+
 
  ~X11Manager();
 
@@ -67,6 +71,7 @@ public slots:
 
     void RemoveWindow();
 
+    void RunDialog();
 
     // Event handlers.
      /* void OnCreateNotify(const XCreateWindowEvent& e);

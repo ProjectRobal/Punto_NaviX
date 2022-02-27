@@ -9,5 +9,10 @@
 #include "focusinxevents.h"
 #include "focusoutxevents.h"
 #include "enternotifyxevents.h"
+#include "unmapnotifyxevents.h"
+#include "buttonpressxevents.h"
+#include "buttonreleasexevents.h"
+#include "presskeyxevent.h"
+#include "releasekeyxevent.h"
 
 #endif // XEVENTS_LIST_H
